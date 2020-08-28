@@ -5,24 +5,52 @@
 </template>
 
 <script>
-import mapboxgl from "mapbox-gl";
+import mapboxgl from "mapbox-gl"; // pure map box gl library
 import _env from "../config/env";
+
 export default {
   name: "MapSample",
+  components: {},
   data() {
     return {
       map: null
     };
   },
   mounted() {
-    this.createMap();
+    Promise.all([this.createMap()]).then(() => {
+      const numData = this.$store.state.numData;
+      let expressionList = ["case"];
+      for (let [key, value] of Object.entries(numData)) {
+        let color = this.getThresholdColor(value);
+        expressionList.push(["==", ["get", "GRID_CODE"], key]);
+        expressionList.push(color);
+      }
+      expressionList.push("rgba(0,0,0,0)");
+      this.setMeshColor(expressionList);
+    });
   },
   methods: {
-    createMap() {
-      // mapboxgl.accessToken = _env.mapboxAccessToken;
+    setMeshColor(expArray) {
+      let map = this.$store.state.map;
+      map.setPaintProperty("500m_mesh_layer", "fill-color", expArray);
+      this.$store.commit("setMap", map);
+    },
+    getThresholdColor(value) {
+      const thresholds = _env.THRESHOLD2048;
+      let color = "";
+      for (let [key, colorValue] of Object.entries(thresholds)) {
+        if (Number(key) > value) {
+          break;
+        } else {
+          color = colorValue;
+        }
+      }
+      return color;
+    },
+    async createMap() {
       let map = new mapboxgl.Map({
-        accessToken: _env.mapboxAccessToken,
-        container: "map",
+        accessToken: _env.mapboxAccessToken, // set access token
+        container: "map", // point map container by element id
         style: {
           version: 8,
           sources: {
@@ -39,24 +67,37 @@ export default {
                 "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"
               ],
               tileSize: 256
+            },
+            "500m_mesh_source": {
+              type: "vector",
+              tiles: [
+                "https://demo-sip7map.datacradle.jp/tile/data/japan_500m_mesh/{z}/{x}/{y}.pbf"
+              ]
             }
           },
           layers: [
             {
-              id: "cyberjapandata_pale_layer",
+              id: "cyberjapandata_std_layer", // 固有のid
               type: "raster",
-              source: "cyberjapandata_pale",
+              source: "cyberjapandata_std", // sourcesの対応するkey
               minzoom: 0,
               maxzoom: 18
             },
             {
-              id: "cyberjapandata_std_layer",
+              id: "cyberjapandata_pale_layer", // 固有のid
               type: "raster",
-              source: "cyberjapandata_std",
+              source: "cyberjapandata_pale", // sourcesの対応するkey
               minzoom: 0,
-              maxzoom: 18,
-              layout: {
-                visibility: "none"
+              maxzoom: 18
+            },
+            {
+              id: "500m_mesh_layer",
+              type: "fill",
+              source: "500m_mesh_source",
+              "source-layer": "japan_500m_mesh",
+              paint: {
+                "fill-color": "rgba(0,0,0,0)",
+                "fill-outline-color": "rgba(0,0,0,0)"
               }
             }
           ]
@@ -66,15 +107,19 @@ export default {
       });
 
       map.addControl(new mapboxgl.NavigationControl());
-      this.map = map;
+      this.$store.commit("setMap", map);
+      await this.$store.dispatch("fetchNumData");
     }
   }
 };
 </script>
-<style scoped>
+
+<style>
 #map {
-  z-index: 100;
+  z-index: 0;
+  position: absolute;
   width: 100%;
   height: 100%;
+  margin: 0;
 }
 </style>
