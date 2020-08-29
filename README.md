@@ -8,7 +8,7 @@
 - mapbox-glのexpressionが慣れるまで面倒
 
 ## Related project
-- [vue-mapboxgl-sample](https://github.com/cSyu2611/vue-mapboxgl-sample)
+- [react-mapboxgl-sample](https://github.com/cSyu2611/react-mapboxgl-sample)
 
 ## Usage
 src/config/env_tmp.jsをコピー＆リネーム
