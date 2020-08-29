@@ -7,6 +7,9 @@
 - 今後の開発プロジェクトで，VueでもReactでもすぐ対応可能なようにプロトタイプとして作成
 - mapbox-glのexpressionが慣れるまで面倒
 
+## Related project
+- [vue-mapboxgl-sample](https://github.com/cSyu2611/vue-mapboxgl-sample)
+
 ## Usage
 src/config/env_tmp.jsをコピー＆リネーム
 ```
